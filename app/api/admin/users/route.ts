@@ -92,8 +92,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, ...validatedData } = UpdateUserSchema.parse(body);
     const userId = body.id;
+    const validatedData = UpdateUserSchema.parse(body);
 
     if (!userId) {
       return NextResponse.json(

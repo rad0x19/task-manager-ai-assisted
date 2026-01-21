@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskList } from '@/components/TaskList';
 import { TaskForm } from '@/components/TaskForm';
@@ -17,11 +17,7 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState<TaskStatus | undefined>(undefined);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  useEffect(() => {
-    loadTasks();
-  }, [filter]);
-
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await fetchTasks(filter);
@@ -31,7 +27,11 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   const handleCreateTask = async (data: CreateTaskInput) => {
     try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { TaskList } from '@/components/TaskList';
 import { KanbanBoard } from '@/components/tasks/KanbanBoard';
 import { CalendarView } from '@/components/tasks/CalendarView';
@@ -20,11 +20,7 @@ export default function TasksPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  useEffect(() => {
-    loadTasks();
-  }, [filter]);
-
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await fetchTasks(filter);
@@ -34,7 +30,11 @@ export default function TasksPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   const handleCreateTask = async (data: CreateTaskInput) => {
     try {
