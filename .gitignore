@@ -36,7 +36,8 @@ yarn-error.log*
 next-env.d.ts
 
 # prisma
-/prisma/migrations
+# Note: migrations should be tracked in git for production deployments
+# /prisma/migrations
 
 # docker
 docker-compose.override.yml
