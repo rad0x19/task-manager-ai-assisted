@@ -103,7 +103,7 @@ export async function PATCH(
         taskId: task.id,
         userId: user.id,
         action: 'UPDATE',
-        metadata: validatedData,
+        metadata: validatedData ? validatedData : undefined,
       },
     });
 

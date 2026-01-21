@@ -1,11 +1,16 @@
-import { User, Workspace, Task } from '@prisma/client';
+import { Workspace, Task, UserRole } from '@prisma/client';
 
-export function canAccessAdmin(user: User) {
+type UserForPermissions = {
+  id: string;
+  role: UserRole | string;
+};
+
+export function canAccessAdmin(user: UserForPermissions) {
   return user.role === 'ADMIN';
 }
 
 export function canManageWorkspace(
-  user: User,
+  user: UserForPermissions,
   workspace: Workspace & { members?: Array<{ userId: string; role: string }> }
 ) {
   if (user.role === 'ADMIN') return true;
@@ -15,7 +20,7 @@ export function canManageWorkspace(
 }
 
 export function canEditTask(
-  user: User,
+  user: UserForPermissions,
   task: Task & { workspace?: Workspace & { members?: Array<{ userId: string; role: string }> } | null }
 ) {
   if (task.userId === user.id) return true;
@@ -26,7 +31,7 @@ export function canEditTask(
 }
 
 export function canViewTask(
-  user: User,
+  user: UserForPermissions,
   task: Task & { workspace?: Workspace & { members?: Array<{ userId: string; role: string }> } | null }
 ) {
   if (task.userId === user.id) return true;

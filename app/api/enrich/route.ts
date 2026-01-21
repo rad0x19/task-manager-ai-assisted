@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       where: { id: taskId },
       data: {
         category: enrichment.category || null,
-        tags: enrichment.tags || null,
+        tags: enrichment.tags || undefined,
         metadata: {
           ...(task.metadata as any || {}),
           ...enrichment,

@@ -85,10 +85,19 @@ export async function resolveConflict(
     taskData = mergedData || conflict.serverVersion as any;
   }
 
+  // Exclude fields that cannot be updated in Prisma
+  const { id, userId, createdAt, updatedAt, ...updateableFields } = taskData;
+
+  // Convert null to undefined for Prisma update (Prisma update input doesn't accept null)
+  const updateData: any = {};
+  for (const [key, value] of Object.entries(updateableFields)) {
+    updateData[key] = value === null ? undefined : value;
+  }
+
   const task = await db.task.update({
     where: { id: taskId },
     data: {
-      ...taskData,
+      ...updateData,
       version: (taskData.version as number) + 1,
       lastSyncedAt: new Date(),
     },

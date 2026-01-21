@@ -29,6 +29,11 @@ export const TaskResponseSchema = z.object({
   category: z.string().nullable(),
   tags: z.array(z.string()).nullable(),
   metadata: z.record(z.any()).nullable(),
+  dueDate: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  lastSyncedAt: z.string().datetime().nullable().optional(),
+  version: z.number().int().optional(),
+  recurringRule: z.record(z.any()).nullable().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

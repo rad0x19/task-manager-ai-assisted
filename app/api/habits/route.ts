@@ -78,8 +78,8 @@ export async function PATCH(request: NextRequest) {
   try {
     const user = await requireAuth();
     const body = await request.json();
-    const { id, ...validatedData } = UpdateHabitSchema.parse(body);
     const habitId = body.id;
+    const validatedData = UpdateHabitSchema.parse(body);
 
     if (!habitId) {
       return NextResponse.json(

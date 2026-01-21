@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
             userId: user.id,
             name: habitData.name,
             frequency: habitData.frequency,
-            metadata: habitData.goal ? { goal: habitData.goal } : null,
+            metadata: habitData.goal ? { goal: habitData.goal } : undefined,
           },
         });
         createdHabits.push(habit);

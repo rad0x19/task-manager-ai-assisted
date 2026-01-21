@@ -22,14 +22,16 @@ export async function POST(request: NextRequest) {
             },
           },
         ],
-        recurringRule: { not: null },
         status: 'COMPLETED',
       },
     });
 
+    // Filter tasks that have recurring rules (Prisma Json fields can't use null in filters)
+    const tasksWithRecurring = recurringTasks.filter((task) => task.recurringRule !== null);
+
     const createdTasks = [];
 
-    for (const task of recurringTasks) {
+    for (const task of tasksWithRecurring) {
       if (!task.recurringRule) continue;
 
       const rule = task.recurringRule as any;
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
           description: task.description,
           priority: task.priority,
           category: task.category,
-          tags: task.tags,
+          tags: task.tags !== null ? task.tags : undefined,
           recurringRule: rule,
           dueDate: nextDate,
           status: 'PENDING',
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      processed: recurringTasks.length,
+      processed: tasksWithRecurring.length,
       created: createdTasks.length,
       tasks: createdTasks,
     });
