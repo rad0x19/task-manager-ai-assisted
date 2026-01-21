@@ -590,11 +590,11 @@ Key prompts used during development are documented in the conversation history a
 
 ### S3. Live Application Link
 
-[To be provided after deployment]
+https://task-manager.roldhandasalla.com/login
 
 ### S4. GitHub Repository Link
 
-[To be provided]
+https://github.com/rad0x19/task-manager-ai-assisted
 
 ## License
 
