@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum WorkspaceType {
+  PERSONAL
+  TEAM
+}
+
+enum WorkspaceMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ChatStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  passwordHash  String
+  role          UserRole @default(USER)
+  avatar        String?
+  preferences   Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tasks         Task[]
+  habits        Habit[]
+  workspaces    WorkspaceMember[]
+  activities    TaskActivity[]
+  conflicts     TaskConflict[]
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+  conversations ChatConversation[]
+
+  @@index([email])
+}
+
+model Workspace {
+  id        String         @id @default(uuid())
+  name      String
+  type      WorkspaceType
+  ownerId   String
+  owner     User           @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  settings  Json?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  tasks     Task[]
+  members   WorkspaceMember[]
+
+  @@index([ownerId])
+}
+
+model WorkspaceMember {
+  id          String              @id @default(uuid())
+  workspaceId String
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        WorkspaceMemberRole @default(MEMBER)
+  joinedAt    DateTime            @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Task {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId   String?
+  workspace     Workspace?  @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  title         String
+  description   String?
+  status        TaskStatus  @default(PENDING)
+  priority      TaskPriority @default(MEDIUM)
+  category      String?
+  tags          Json?
+  metadata      Json?
+  recurringRule Json?
+  dueDate       DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lastSyncedAt  DateTime?
+  version       Int         @default(1)
+
+  activities    TaskActivity[]
+  conflicts     TaskConflict[]
+
+  @@index([userId, status, createdAt])
+  @@index([workspaceId])
+  @@index([dueDate])
+}
+
+model Habit {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  frequency       String
+  streak          Int      @default(0)
+  longestStreak   Int      @default(0)
+  lastCompletedAt DateTime?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+model TaskActivity {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  metadata  Json?
+  timestamp DateTime @default(now())
+
+  @@index([taskId])
+  @@index([userId, timestamp])
+}
+
+model TaskConflict {
+  id            String   @id @default(uuid())
+  taskId        String
+  task          Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serverVersion Json
+  clientVersion Json
+  resolution    String?
+  resolvedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model ChatConversation {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?
+  status      ChatStatus @default(ACTIVE)
+  plan        Json?
+  approvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    ChatMessage[]
+
+  @@index([userId, createdAt])
+}
+
+model ChatMessage {
+  id             String           @id @default(uuid())
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+}
