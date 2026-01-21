@@ -115,7 +115,14 @@ cd "To-Do List"
 
 ### 2. Set up environment variables
 
-Create a `.env.local` file in the project root:
+Create a `.env` file in the project root (Docker Compose automatically reads `.env`):
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Or create manually with these variables:
+```
 
 ```bash
 # Database (automatically configured in Docker)
@@ -295,13 +302,91 @@ The AI Chat Assistant is accessible via the floating chat widget in the bottom-r
 
 ## Creating an Admin User
 
-After running migrations, create an admin user using Prisma Studio:
+There are several ways to create an administrator account:
 
+### Method 1: Using the Admin Creation Script (Recommended)
+
+The easiest way is to use the provided script:
+
+**For Development (Docker):**
 ```bash
-docker-compose exec web npx prisma studio
+docker-compose exec web node scripts/create-admin.js admin@example.com YourSecurePassword "Admin Name"
 ```
 
-Then update a user's role to `ADMIN` in the User table.
+**For Production:**
+```bash
+docker-compose -f docker-compose.prod.yml exec web node scripts/create-admin.js admin@example.com YourSecurePassword "Admin Name"
+```
+
+**For Local Development (without Docker):**
+```bash
+node scripts/create-admin.js admin@example.com YourSecurePassword "Admin Name"
+```
+
+The script will:
+- Create a new admin user if the email doesn't exist
+- Update an existing user to admin role if the email already exists
+- Create a default workspace for the admin user
+- Hash the password securely
+
+### Method 2: Using Prisma Studio
+
+1. Open Prisma Studio:
+   ```bash
+   # Development
+   docker-compose exec web npx prisma studio
+   
+   # Production
+   docker-compose -f docker-compose.prod.yml exec web npx prisma studio
+   ```
+
+2. Navigate to the `User` table
+3. Either:
+   - **Create a new user**: Click "Add record", fill in the form, set `role` to `ADMIN`, and hash the password using bcrypt (or use Method 1)
+   - **Update existing user**: Find an existing user and change their `role` field from `USER` to `ADMIN`
+
+### Method 3: Using Prisma CLI
+
+**Update an existing user to admin:**
+```bash
+# Development
+docker-compose exec web npx prisma db execute --stdin <<< "UPDATE \"User\" SET role = 'ADMIN' WHERE email = 'user@example.com';"
+
+# Production
+docker-compose -f docker-compose.prod.yml exec web npx prisma db execute --stdin <<< "UPDATE \"User\" SET role = 'ADMIN' WHERE email = 'user@example.com';"
+```
+
+**Note**: You'll need to hash the password separately if creating a new user this way.
+
+### Method 4: Direct Database Access
+
+Connect to PostgreSQL directly and run SQL:
+
+```bash
+# Development
+docker-compose exec postgres psql -U taskmanager -d taskmanager
+
+# Production
+docker-compose -f docker-compose.prod.yml exec postgres psql -U taskmanager -d taskmanager
+```
+
+Then in the PostgreSQL prompt:
+```sql
+-- Update existing user to admin
+UPDATE "User" SET role = 'ADMIN' WHERE email = 'user@example.com';
+
+-- Or create new admin (password needs to be hashed with bcrypt)
+-- Use Method 1 instead for password hashing
+```
+
+### After Creating Admin
+
+1. Log in with the admin credentials at `/login`
+2. Access the admin panel at `/admin`
+3. You'll see additional options:
+   - User Management
+   - System Analytics
+   - AI Configuration
 
 ## Docker Commands
 
@@ -337,11 +422,12 @@ docker-compose exec web npx prisma studio
 
 ```bash
 # Create production environment file
-cp .env.production.example .env.production
-# Edit .env.production with your production values
+# Docker Compose automatically reads .env file from the project root
+cp .env.production.example .env
+# Edit .env with your production values (set OPENAI_API_KEY, NEXTAUTH_SECRET, etc.)
 
 # Build and start production services
-docker-compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+docker-compose -f docker-compose.prod.yml up -d --build
 
 # Run production migrations
 docker-compose -f docker-compose.prod.yml exec web npx prisma migrate deploy
@@ -380,13 +466,14 @@ For production deployment using Docker Compose:
 
 1. **Create production environment file:**
    ```bash
-   cp .env.production.example .env.production
-   # Edit .env.production with your production values
+   cp .env.production.example .env
+   # Edit .env with your production values
    ```
 
 2. **Build and start production services:**
    ```bash
-   docker-compose -f docker-compose.prod.yml --env-file .env.production up -d
+   # Docker Compose automatically reads .env file
+   docker-compose -f docker-compose.prod.yml up -d --build
    ```
 
 3. **Run database migrations:**

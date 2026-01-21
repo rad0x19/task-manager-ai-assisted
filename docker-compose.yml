@@ -19,8 +19,9 @@ services:
     build: .
     ports:
       - "3000:3000"
+    # Docker Compose automatically reads .env file, but we can explicitly specify it
     env_file:
-      - .env.local
+      - .env
     environment:
       DATABASE_URL: postgresql://taskmanager:taskmanager_dev@postgres:5432/taskmanager
       OPENAI_API_KEY: ${OPENAI_API_KEY}
